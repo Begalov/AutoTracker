@@ -18,8 +18,8 @@
 
 bl_info = {
     "name": "Autotrack",
-    "author": "Miika Puustinen, Matti Kaihola, Stephen Leger",
-    "version": (0, 1, 0),
+    "author": "Miika Puustinen, Matti Kaihola, Stephen Leger, RUben Begalov@gmail.com",
+    "version": (0, 1, 1),
     "blender": (2, 80, 0),
     "location": "Movie clip Editor > Tools Panel > Autotrack",
     "description": "Motion Tracking with automatic feature detection.",
@@ -104,7 +104,7 @@ def draw_callback(self, context):
     self.gl.String(str(int(100*abs(self.progress)))+"% ESC to Cancel", 14, 28, 10, self.gl.white)
     
 
-class OP_Tracking_auto_tracker(bpy.types.Operator):
+class AT_OP_Tracking(bpy.types.Operator):
     """Autotrack. Esc to cancel."""
     bl_idname = "tracking.auto_track"
     bl_label = "AutoTracking"
@@ -506,9 +506,9 @@ class OP_Tracking_auto_tracker(bpy.types.Operator):
 
 
 
-class AutotrackerSettings(PropertyGroup):
+class AT_PG_Settings(PropertyGroup):
     """Create properties"""
-    df_margin = FloatProperty(
+    df_margin: FloatProperty(
             name="Detect Features Margin",
             description="Only features further margin pixels from the image edges are considered.",
             subtype='PERCENTAGE',
@@ -517,7 +517,7 @@ class AutotrackerSettings(PropertyGroup):
             max=100
             )
             
-    df_threshold = FloatProperty(
+    df_threshold: FloatProperty(
             name="Detect Features Threshold",
             description="Threshold level to concider feature good enough for tracking.",
             default=0.3,
@@ -525,7 +525,7 @@ class AutotrackerSettings(PropertyGroup):
             max=1.0
             )
     # Note: merge this one with delete_threshold        
-    df_distance = FloatProperty(
+    df_distance: FloatProperty(
             name="Detect Features Distance",
             description="Minimal distance accepted between two features.",
             subtype='PERCENTAGE',
@@ -534,7 +534,7 @@ class AutotrackerSettings(PropertyGroup):
             max=100
             )
 
-    delete_threshold = FloatProperty(
+    delete_threshold: FloatProperty(
             name="New Marker Threshold",
             description="Threshold how near new features can appear during autotracking.",
             subtype='PERCENTAGE',
@@ -543,7 +543,7 @@ class AutotrackerSettings(PropertyGroup):
             max=100
             )
             
-    small_tracks = IntProperty(
+    small_tracks: IntProperty(
             name="Minimum track length",
             description="Delete tracks shortest than this number of frames (set to 0 to keep all tracks).",
             default=50,
@@ -551,7 +551,7 @@ class AutotrackerSettings(PropertyGroup):
             max=1000
             )
             
-    frame_separation = IntProperty(
+    frame_separation: IntProperty(
             name="Frame Separation",
             description="How often new features are generated.",
             default=5,
@@ -559,7 +559,7 @@ class AutotrackerSettings(PropertyGroup):
             max=100
             )
 
-    jump_cut = FloatProperty(
+    jump_cut: FloatProperty(
             name="Jump Cut",
             description="Distance how much a marker can travel before it is considered "
                         "to be a bad track and cut. A new track is added. (factor relative to mean motion)",
@@ -568,7 +568,7 @@ class AutotrackerSettings(PropertyGroup):
             max=50.0
             )
 
-    track_backwards = BoolProperty(
+    track_backwards: BoolProperty(
             name="AutoTrack Backwards",
             description="Autotrack backwards.",
             default=False
@@ -581,7 +581,7 @@ class AutotrackerSettings(PropertyGroup):
         ("OUTSIDE_GPENCIL", "Outside Grease Pencil", "", 3),
     ]
 
-    placement_list = EnumProperty(
+    placement_list: EnumProperty(
             name="Placement",
             description="Feature Placement",
             items=list_items
@@ -594,12 +594,12 @@ class AutotrackerSettings(PropertyGroup):
 
 
 
-class AutotrackerPanel(bpy.types.Panel):
+class AT_PT_Panel(bpy.types.Panel):
     """Creates a Panel in the Render Layer properties window"""
     bl_label = "AutoTrack"
-    bl_idname = "autotrack"
+    bl_idname = "AT_PT_Autotrack"
     bl_space_type = 'CLIP_EDITOR'
-    bl_region_type = 'UI'
+    bl_region_type = 'TOOLS'
     bl_category = "Track"
     
     @classmethod
@@ -645,7 +645,11 @@ class AutotrackerPanel(bpy.types.Panel):
         layout.separator()
 
 
-classes = (OP_Tracking_auto_tracker,AutotrackerSettings, AutotrackerPanel)
+classes = (
+	AT_OP_Tracking,
+	AT_PG_Settings,
+	AT_PT_Panel
+	)
 
 def register():
     
@@ -655,7 +659,7 @@ def register():
         
 #    bpy.utils.register_class(AutotrackerSettings)
     
-    WindowManager.autotracker_props = PointerProperty(type=AutotrackerSettings)
+    WindowManager.autotracker_props = PointerProperty(type=AT_PG_Settings)
     
     
         
@@ -666,6 +670,7 @@ def unregister():
     #bpy.utils.unregister_class(AutotrackerSettings)
    # bpy.utils.unregister_module(__name__)   
     del WindowManager.autotracker_props
+    from bpy.utils import unregister_class
     for cls in reversed(classes):
         unregister_class(cls)
         
